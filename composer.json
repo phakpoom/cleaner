@@ -1,0 +1,25 @@
+{
+    "name": "phakpoom/cleaner",
+    "license": "MIT",
+    "type": "project",
+    "description": "wm",
+    "autoload": {
+        "psr-4": {
+            "": "src"
+        },
+        "classmap": []
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests"
+        }
+    },
+    "require": {
+        "php": ">=7.2",
+        "ext-json": "*",
+
+        "symfony/console": "^5.0",
+        "symfony/finder": "^5.0",
+        "symfony/filesystem": "^5.0"
+    }
+}
