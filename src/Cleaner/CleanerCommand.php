@@ -45,6 +45,24 @@ class CleanerCommand extends Command
                     }
                 }
             }
+
+            foreach (['node_modules', 'web/assets'] as $subFolder) {
+                $removingDir = realpath($folder->getRealPath() . '/..') . '/' . $subFolder;
+                if ($fs->exists($removingDir)) {
+                    $diffInDay = round((time() - filemtime($removingDir)) / 60 / 60 / 24);
+
+                    if ($diffInDay <= 250) {
+                        continue;
+                    }
+
+                    if (0 !== $size = $this->removeRecursiveInFolder($removingDir)) {
+                        $io->success(sprintf('Remove in "%s" -> %s',
+                            $removingDir,
+                            'Size ' . $this->formatBytes($size)
+                        ));
+                    }
+                }
+            }
         }
 
         return 0;
@@ -72,7 +90,7 @@ class CleanerCommand extends Command
     protected function formatBytes($size, $precision = 2): string
     {
         $base = log($size, 1024);
-        $suffixes = array('', 'K', 'M', 'G', 'T');
+        $suffixes = array('', 'KB', 'MB', 'GB', 'TB');
 
         return round(pow(1024, $base - floor($base)), $precision) . ' ' . $suffixes[floor($base)];
     }
