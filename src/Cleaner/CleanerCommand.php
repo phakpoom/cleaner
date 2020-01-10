@@ -23,14 +23,14 @@ class CleanerCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $dir = $input->getArgument('lookup');
-
-        $dir = realpath($dir);
+        $dir = realpath($input->getArgument('lookup'));
 
         $allVarSymfonyFolder = (new Finder())->in($dir)->directories()->depth('< 2')->name('var');
 
         $fs = new Filesystem();
         $io = new SymfonyStyle($input, $output);
+
+        $allSizeSave = 0;
 
         /** @var \SplFileInfo $folder */
         foreach ($allVarSymfonyFolder as $folder) {
@@ -42,6 +42,8 @@ class CleanerCommand extends Command
                             $removingDir,
                             'Size ' . $this->formatBytes($size)
                         ));
+
+                        $allSizeSave += $size;
                     }
                 }
             }
@@ -60,9 +62,17 @@ class CleanerCommand extends Command
                             $removingDir,
                             'Size ' . $this->formatBytes($size)
                         ));
+
+                        $allSizeSave += $size;
                     }
                 }
             }
+        }
+
+        if ($allSizeSave > 0) {
+            $io->success(sprintf('Save!! %s',
+                $this->formatBytes($allSizeSave)
+            ));
         }
 
         return 0;
