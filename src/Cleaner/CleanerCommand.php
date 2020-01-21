@@ -9,6 +9,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
+use Utils\Utils;
 
 class CleanerCommand extends Command
 {
@@ -40,7 +41,7 @@ class CleanerCommand extends Command
                     if (0 !== $size = $this->removeRecursiveInFolder($removingDir)) {
                         $io->success(sprintf('Remove in "%s" -> %s',
                             $removingDir,
-                            'Size ' . $this->formatBytes($size)
+                            'Size ' . Utils::formatBytes($size)
                         ));
 
                         $allSizeSave += $size;
@@ -60,7 +61,7 @@ class CleanerCommand extends Command
                     if (0 !== $size = $this->removeRecursiveInFolder($removingDir)) {
                         $io->success(sprintf('Remove in "%s" -> %s',
                             $removingDir,
-                            'Size ' . $this->formatBytes($size)
+                            'Size ' . Utils::formatBytes($size)
                         ));
 
                         $allSizeSave += $size;
@@ -71,7 +72,7 @@ class CleanerCommand extends Command
 
         if ($allSizeSave > 0) {
             $io->success(sprintf('Save!! %s',
-                $this->formatBytes($allSizeSave)
+                Utils::formatBytes($allSizeSave)
             ));
         }
 
@@ -95,13 +96,5 @@ class CleanerCommand extends Command
         }
 
         return $fileSize;
-    }
-
-    protected function formatBytes($size, $precision = 2): string
-    {
-        $base = log($size, 1024);
-        $suffixes = array('', 'KB', 'MB', 'GB', 'TB');
-
-        return round(pow(1024, $base - floor($base)), $precision) . ' ' . $suffixes[floor($base)];
     }
 }

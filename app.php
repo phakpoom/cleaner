@@ -8,5 +8,6 @@ use Symfony\Component\Console\Application;
 $application = new Application();
 
 $application->add(new \Cleaner\CleanerCommand());
+$application->add(new \Resizer\ResizeImageCommand());
 
 $application->run();
