@@ -7,10 +7,12 @@ use Imagine\Filter\Basic\WebOptimization;
 use Imagine\Image\Box;
 use Imagine\Image\ImageInterface;
 use Imagine\Imagick\Imagine;
+use Spatie\ImageOptimizer\OptimizerChainFactory;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Filesystem\Filesystem;
@@ -29,7 +31,7 @@ class ResizeImageCommand extends Command
             ->setDescription('Resize multiple images.')
             ->addArgument('lookup', InputArgument::REQUIRED, 'Root dir for lookup')
             ->addArgument('size', InputArgument::OPTIONAL, 'Size in Pixel')
-            ->addOption('quality', 'quality', InputOption::VALUE_OPTIONAL, 'quality', 60);
+            ->addOption('quality', 'quality', InputOption::VALUE_OPTIONAL, 'quality', 95);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -61,25 +63,36 @@ class ResizeImageCommand extends Command
         $save = 0;
         foreach ($images as $image) {
             $imagine = new Imagine();
-
+            $optimizer = OptimizerChainFactory::create()->useLogger(new ConsoleLogger($output));
             $beforeSize = $image->getSize();
             $imagineImage = $imagine->open($image->getRealPath());
 
             if (isset($width, $height)) {
                 $imagineImage = $imagineImage->thumbnail((new Box($width, $height)), ImageInterface::THUMBNAIL_INSET);
+
+                $imagineImage = (new Autorotate())->apply($imagineImage);
+                $imagineImage = (new WebOptimization($newFileRealPath = $folderBase . $image->getBasename(), [
+                    'quality' => (int) $input->getOption('quality'),
+                ]))->apply($imagineImage);
+
+                $imagineImage->getImagick()->clear();
+
+                $optimizer->optimize($newFileRealPath);
+            } else {
+                $newFileRealPath = $folderBase . $image->getBasename();
+
+                $optimizer->optimize($image->getRealPath(), $newFileRealPath);
             }
 
-            $imagineImage = (new Autorotate())->apply($imagineImage);
-            $imagineImage = (new WebOptimization($newFileRealPath = $folderBase . $image->getBasename(), [
-                'quality' => (int) $input->getOption('quality'),
-            ]))->apply($imagineImage);
+            $afterSize = filesize($newFileRealPath);
+            $compare = $afterSize / $beforeSize * 100;
+            $compare = round($compare, 1);
 
-            $imagineImage->getImagick()->clear();
-
-            $message = sprintf('Resize! %s | %s -> %s',
+            $message = sprintf('Resize! %s | %s -> %s (%d%%)',
                 $image->getFilename(),
                 Utils::formatBytes($beforeSize),
-                Utils::formatBytes($afterSize = filesize($newFileRealPath))
+                Utils::formatBytes($afterSize),
+                $compare
             );
 
             $currentSave = $beforeSize - $afterSize;
