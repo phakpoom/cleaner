@@ -1,4 +1,7 @@
-# cleaner
+# Commands
 
-./app.php cleaner /path/to/root/dir
-./app.php resizer /path/to/root/dir 100x100
+## Clean 
+./app.php cleaner --help
+
+## Resize & Optimize Image
+./app.php resize --help
