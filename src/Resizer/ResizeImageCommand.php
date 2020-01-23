@@ -85,7 +85,7 @@ class ResizeImageCommand extends Command
             }
 
             $afterSize = filesize($newFileRealPath);
-            $compare = $afterSize / $beforeSize * 100;
+            $compare = 100 - ($afterSize / $beforeSize * 100);
             $compare = round($compare, 1);
 
             $message = sprintf('Resize! %s | %s -> %s (%d%%)',
