@@ -31,7 +31,8 @@ class ResizeImageCommand extends Command
             ->setDescription('Resize multiple images.')
             ->addArgument('lookup', InputArgument::REQUIRED, 'Root dir for lookup')
             ->addArgument('size', InputArgument::OPTIONAL, 'Size in Pixel')
-            ->addOption('quality', 'quality', InputOption::VALUE_OPTIONAL, 'quality', 95);
+            ->addOption('quality', 'quality', InputOption::VALUE_OPTIONAL, 'quality', 95)
+            ->addOption('pattern', 'pattern', InputOption::VALUE_OPTIONAL, '*.{png,jpg,jpeg,gif}');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -41,7 +42,7 @@ class ResizeImageCommand extends Command
         $images = (new Finder())
             ->in($dir)
             ->files()
-            ->name('*.{png,jpg,jpeg,gif}')
+            ->name($input->getOption('pattern'))
             ->exclude(self::FOLDER_NAME);
 
         $fs = new Filesystem();
