@@ -41,7 +41,7 @@ class ResizeImageCommand extends Command
         $images = (new Finder())
             ->in($dir)
             ->files()
-            ->name('*.{png,jpg,jpeg,dif}')
+            ->name('*.{png,jpg,jpeg,gif}')
             ->exclude(self::FOLDER_NAME);
 
         $fs = new Filesystem();
