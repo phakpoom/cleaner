@@ -2,7 +2,7 @@
     "name": "phakpoom/cleaner",
     "license": "MIT",
     "type": "project",
-    "description": "wm",
+    "description": "NOT ONLY CLEANER",
     "autoload": {
         "psr-4": {
             "": "src"
