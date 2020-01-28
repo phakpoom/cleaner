@@ -29,36 +29,49 @@ class ResizeImageCommand extends Command
     {
         $this
             ->setDescription('Resize multiple images.')
-            ->addArgument('lookup', InputArgument::REQUIRED, 'Root dir for lookup')
+            ->addArgument('lookup', InputArgument::REQUIRED, 'Root dir or file for lookup')
             ->addArgument('size', InputArgument::OPTIONAL, 'Size in Pixel')
             ->addOption('quality', 'quality', InputOption::VALUE_OPTIONAL, 'quality', 95)
-            ->addOption('pattern', 'pattern', InputOption::VALUE_OPTIONAL, '*.{png,jpg,jpeg,gif}');
+            ->addOption('pattern', 'pattern', InputOption::VALUE_OPTIONAL, '', '*.{png,jpg,jpeg,gif}');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $dir = realpath($input->getArgument('lookup'));
-
-        $images = (new Finder())
-            ->in($dir)
-            ->files()
-            ->name($input->getOption('pattern'))
-            ->exclude(self::FOLDER_NAME);
-
         $fs = new Filesystem();
         $io = new SymfonyStyle($input, $output);
+        $lookup = $input->getArgument('lookup');
+
+        if (!$fs->exists($lookup)) {
+            $io->error(sprintf("The \"%s\" does not exist.", $lookup));
+
+            return 1;
+        }
+
+        if (is_dir($lookup)) {
+            $folderBase = $lookup . '/' . self::FOLDER_NAME . '/';
+
+            if (!$fs->exists($folderBase)) {
+                $fs->mkdir($folderBase);
+            }
+
+            $images = (new Finder())
+                ->in($lookup)
+                ->files()
+                ->name($input->getOption('pattern'))
+                ->exclude(self::FOLDER_NAME);
+        } else {
+            // file
+            $img = new \SplFileInfo($lookup);
+            $folderBase = dirname($img->getRealPath()) . '/' . self::FOLDER_NAME . '_';
+
+            $images = [$img];
+        }
 
         /** @var \SplFileInfo $image */
         if (!empty($input->getArgument('size'))) {
             $size = explode('x', $input->getArgument('size'));
             $width = $size[0];
             $height = $size[1] ?? $width;
-        }
-
-        $folderBase = $dir . '/' . self::FOLDER_NAME . '/';
-
-        if (!$fs->exists($folderBase)) {
-            $fs->mkdir($folderBase);
         }
 
         $save = 0;
