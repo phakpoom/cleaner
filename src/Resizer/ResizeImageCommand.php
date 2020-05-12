@@ -32,6 +32,7 @@ class ResizeImageCommand extends Command
             ->addArgument('lookup', InputArgument::REQUIRED, 'Root dir or file for lookup')
             ->addArgument('size', InputArgument::OPTIONAL, 'Size in Pixel')
             ->addOption('quality', 'quality', InputOption::VALUE_OPTIONAL, 'quality', 95)
+            ->addOption('include_bigger', 'include_bigger', InputOption::VALUE_NONE, 'include_bigger')
             ->addOption('pattern', 'pattern', InputOption::VALUE_OPTIONAL, '', '*.{png,jpg,jpeg,gif}');
     }
 
@@ -99,6 +100,12 @@ class ResizeImageCommand extends Command
             }
 
             $afterSize = filesize($newFileRealPath);
+            if (!$input->getOption('include_bigger') && $afterSize > $beforeSize) {
+                $fs->remove($newFileRealPath);
+
+                continue;
+            }
+
             $compare = 100 - ($afterSize / $beforeSize * 100);
             $compare = round($compare, 1);
 
