@@ -20,7 +20,7 @@ class RenameFileNameForAnimationCommand extends Command
         $this
             ->setDescription('Rename image and json file for animation.')
             ->addArgument('lookup', InputArgument::REQUIRED, 'Root dir for lookup')
-            ->addArgument('prefix_image_path', InputArgument::REQUIRED, 'Prefix image for web apth')
+            ->addArgument('prefix_image_path', InputArgument::REQUIRED, 'Prefix image for web path')
         ;
     }
 

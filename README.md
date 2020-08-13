@@ -1,7 +1,10 @@
 # Commands
 
-## Clean 
-./app.php cleaner --help
+## Clean garbage
+`./app.php clean --help`
 
 ## Resize & Optimize Image
-./app.php resize --help
+`./app.php resize --help`
+
+## Rename images and json animation files 
+`./app.php animation:rename_file --help`
