@@ -18,6 +18,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
 use Utils\Utils;
+use WebPConvert\Convert\Exceptions\ConversionFailedException;
 use WebPConvert\WebPConvert;
 
 class WebPConverterCommand extends Command
@@ -70,7 +71,15 @@ class WebPConverterCommand extends Command
 
         /** @var \SplFileInfo $image */
         foreach ($images as $image) {
-            WebPConvert::convert($image->getRealPath(), $folderBase . \explode('.', $image->getFilename())[0] . '.webp');
+            try {
+                WebPConvert::convert($image->getRealPath(), $folderBase . \explode('.', $image->getFilename())[0] . '.webp');
+            } catch (ConversionFailedException $e) {
+                $io->error($e->getMessage());
+
+                continue;
+            }
+
+            $io->success(\sprintf('Convert %s successfully.', $image->getFilename()));
         }
 
         return 0;
