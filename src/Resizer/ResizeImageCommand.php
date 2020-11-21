@@ -33,7 +33,8 @@ class ResizeImageCommand extends Command
             ->addArgument('size', InputArgument::OPTIONAL, 'Size in Pixel')
             ->addOption('quality', 'quality', InputOption::VALUE_OPTIONAL, 'quality', 95)
             ->addOption('include_bigger', 'include_bigger', InputOption::VALUE_NONE, 'include_bigger')
-            ->addOption('pattern', 'pattern', InputOption::VALUE_OPTIONAL, '', '*.{png,jpg,jpeg,gif}');
+            ->addOption('pattern', 'pattern', InputOption::VALUE_OPTIONAL, '', '*.{png,jpg,jpeg,gif}')
+            ->addOption('name', 'name', InputOption::VALUE_OPTIONAL, 'new_file_name_COUNT *** COUNT = index file');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -76,17 +77,21 @@ class ResizeImageCommand extends Command
         }
 
         $save = 0;
+        $counting = 0;
         foreach ($images as $image) {
+            $counting++;
             $imagine = new Imagine();
             $optimizer = OptimizerChainFactory::create()->useLogger(new ConsoleLogger($output));
             $beforeSize = $image->getSize();
             $imagineImage = $imagine->open($image->getRealPath());
 
+            $newFileRealPath = $this->getNewFileName($image, $input, $folderBase, $counting);
+
             if (isset($width, $height)) {
                 $imagineImage = $imagineImage->thumbnail((new Box($width, $height)), ImageInterface::THUMBNAIL_INSET);
 
                 $imagineImage = (new Autorotate())->apply($imagineImage);
-                $imagineImage = (new WebOptimization($newFileRealPath = $folderBase . $image->getBasename(), [
+                $imagineImage = (new WebOptimization($newFileRealPath, [
                     'quality' => (int) $input->getOption('quality'),
                 ]))->apply($imagineImage);
 
@@ -94,8 +99,6 @@ class ResizeImageCommand extends Command
 
                 $optimizer->optimize($newFileRealPath);
             } else {
-                $newFileRealPath = $folderBase . $image->getBasename();
-
                 $optimizer->optimize($image->getRealPath(), $newFileRealPath);
             }
 
@@ -134,5 +137,18 @@ class ResizeImageCommand extends Command
         }
 
         return 0;
+    }
+
+    private function getNewFileName(\SplFileInfo $image, InputInterface $input, string $folderBase, int $c)
+    {
+        $fileName = $image->getBasename();
+        if ($input->getOption('name')) {
+            if (false === \strpos($input->getOption('name'), 'COUNT')) {
+                throw new \InvalidArgumentException('Option name must be `COUNT`');
+            }
+            $fileName = (\str_replace('COUNT', $c, $input->getOption('name'))) . '.' . $image->getExtension();
+        }
+
+        return $newFileRealPath = $folderBase . $fileName;
     }
 }
