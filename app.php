@@ -10,5 +10,6 @@ $application = new Application();
 $application->add(new \Cleaner\CleanerCommand());
 $application->add(new \Resizer\ResizeImageCommand());
 $application->add(new \Animation\RenameFileNameForAnimationCommand());
+$application->add(new \Converter\WebPConverterCommand());
 
 $application->run();
