@@ -64,7 +64,9 @@ class ResizeImageCommand extends Command
         } else {
             // file
             $img = new \SplFileInfo($lookup);
-            $folderBase = dirname($img->getRealPath()) . '/' . self::FOLDER_NAME . '_';
+            $folderBase = \dirname($img->getRealPath()) . '/';
+
+            \copy($img->getRealPath(), \dirname($img->getRealPath()) . '/original_' . $img->getFilename());
 
             $images = [$img];
         }
