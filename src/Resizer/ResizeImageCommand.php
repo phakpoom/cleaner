@@ -33,7 +33,7 @@ class ResizeImageCommand extends Command
             ->addArgument('size', InputArgument::OPTIONAL, 'Size in Pixel')
             ->addOption('quality', 'quality', InputOption::VALUE_OPTIONAL, 'quality', 95)
             ->addOption('include_bigger', 'include_bigger', InputOption::VALUE_NONE, 'include_bigger')
-            ->addOption('pattern', 'pattern', InputOption::VALUE_OPTIONAL, '', '*.{png,jpg,jpeg,gif}')
+            ->addOption('pattern', 'pattern', InputOption::VALUE_OPTIONAL, '', '*.{png,jpg,jpeg,gif,JPG,JPEG}')
             ->addOption('name', 'name', InputOption::VALUE_OPTIONAL, 'new_file_name_COUNT *** COUNT = index file');
     }
 
