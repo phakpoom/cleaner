@@ -86,6 +86,7 @@ class ResizeImageCommand extends Command
             $optimizer = OptimizerChainFactory::create()->useLogger(new ConsoleLogger($output));
             $beforeSize = $image->getSize();
             $imagineImage = $imagine->open($image->getRealPath());
+            $isGif = 'gif' === $image->getExtension();
 
             $newFileRealPath = $this->getNewFileName($image, $input, $folderBase, $counting);
 
@@ -96,6 +97,10 @@ class ResizeImageCommand extends Command
                 $imagineImage = (new WebOptimization($newFileRealPath, [
                     'quality' => (int) $input->getOption('quality'),
                 ]))->apply($imagineImage);
+
+                $imagineImage->save(null, [
+                    'animated' => $isGif,
+                ]);
 
                 $imagineImage->getImagick()->clear();
 

@@ -64,8 +64,8 @@ class WebPConverterCommand extends Command
         foreach ($images as $image) {
             try {
                 WebPConvert::convert($image->getRealPath(), $folderBase . \explode('.', $image->getFilename())[0] . '.webp');
-            } catch (ConversionFailedException $e) {
-                $io->error($e->getMessage());
+            } catch (\Exception $e) {
+                $io->error(\sprintf('Convert %s error %s.', $image->getFilename(), $e->getMessage()));
 
                 continue;
             }
