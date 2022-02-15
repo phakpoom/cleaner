@@ -91,16 +91,19 @@ class ResizeImageCommand extends Command
             $newFileRealPath = $this->getNewFileName($image, $input, $folderBase, $counting);
 
             if (isset($width, $height)) {
-                $imagineImage = $imagineImage->thumbnail((new Box($width, $height)), ImageInterface::THUMBNAIL_INSET);
+                $imagineImage = $imagineImage
+                    ->thumbnail((new Box($width, $height)), ImageInterface::THUMBNAIL_INSET);
 
-                $imagineImage = (new Autorotate())->apply($imagineImage);
-                $imagineImage = (new WebOptimization($newFileRealPath, [
-                    'quality' => (int) $input->getOption('quality'),
-                ]))->apply($imagineImage);
-
-                $imagineImage->save(null, [
-                    'animated' => $isGif,
-                ]);
+                if ($isGif) {
+                    $imagineImage->save($newFileRealPath, [
+                        'animated' => true,
+                    ]);
+                } else {
+                     $imagineImage = (new Autorotate())->apply($imagineImage);
+                     $imagineImage = (new WebOptimization($newFileRealPath, [
+                        'quality' => (int)$input->getOption('quality'),
+                    ]))->apply($imagineImage);
+                }
 
                 $imagineImage->getImagick()->clear();
 
