@@ -7,6 +7,7 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Filesystem\Filesystem;
@@ -22,7 +23,8 @@ class TranslationConverterCommand extends Command
     {
         $this
             ->setDescription('Convert translation for translating.')
-            ->addArgument('input', InputArgument::REQUIRED, 'A file');
+            ->addArgument('input', InputArgument::REQUIRED, 'A file')
+            ->addOption('diff', 'diff', InputOption::VALUE_OPTIONAL, 'A file');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -30,6 +32,28 @@ class TranslationConverterCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $file = realpath($input->getArgument('input'));
         $fileInfo = new \SplFileInfo($file);
+
+        if ($input->getOption('diff')) {
+            $fileToCompare = realpath($input->getOption('diff'));
+            $fileToCompareInfo = new \SplFileInfo($fileToCompare);
+            if (!$fileToCompareInfo->isFile()) {
+                throw new \InvalidArgumentException("The file {$input->getOption('diff')} is not exist.");
+            }
+
+            $inputJson = \json_decode(\file_get_contents($fileInfo->getRealPath()), true);
+            $compareJson = \json_decode(\file_get_contents($fileToCompareInfo->getRealPath()), true);
+
+            $resolvedInput = [];
+            $this->walk($inputJson, $resolvedInput);
+            $resolvedCompare = [];
+            $this->walk($compareJson, $resolvedCompare);
+
+            $diff = \array_diff(\array_keys($resolvedInput), \array_keys($resolvedCompare));
+            $io->warning(\count($diff));
+            $io->warning($diff);
+
+            return 0;
+        }
 
         if ('json' === $fileInfo->getExtension()) {
             $spreadsheet = new Spreadsheet();
@@ -65,18 +89,19 @@ class TranslationConverterCommand extends Command
         }
 
         if ('xlsx' === $fileInfo->getExtension()) {
-            $reader =  new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+            $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
             $content = $reader->load($fileInfo->getRealPath());
 
             $translateContent = [];
             foreach ($content->getActiveSheet()->toArray() as $k => $v) {
                 if (0 === $k) continue; // header
                 [$code, $origin, $translate] = $v;
+                if (empty($code)) continue;
 
-                $this->setWithKeyDot($code, (string) $translate, $translateContent);
+                $this->setWithKeyDot($code, (string)$translate, $translateContent);
             }
 
-            \file_put_contents("{$fileInfo->getPath()}/translation.json", \json_encode($translateContent, \JSON_PRETTY_PRINT));
+            \file_put_contents("{$fileInfo->getPath()}/translation.json", \json_encode($translateContent, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_UNICODE));
 
             $io->success("Convert to json successfully.");
         }
