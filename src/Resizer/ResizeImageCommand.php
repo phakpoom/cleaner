@@ -2,6 +2,7 @@
 
 namespace Resizer;
 
+use DTO\Lookup;
 use Imagine\Filter\Basic\Autorotate;
 use Imagine\Filter\Basic\WebOptimization;
 use Imagine\Image\Box;
@@ -14,8 +15,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
 use Utils\Utils;
 
@@ -39,37 +38,19 @@ class ResizeImageCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $fs = new Filesystem();
-        $io = new SymfonyStyle($input, $output);
-        $lookup = $input->getArgument('lookup');
+        $lookup = Lookup::create(
+            $input,
+            $output,
+            self::FOLDER_NAME,
+            function (Finder $finder) use ($input) {
+                return $finder->name($input->getOption('pattern'));
+            },
+            function (\SplFileInfo $img) {
+                \copy($img->getRealPath(), \dirname($img->getRealPath()) . '/original_' . $img->getFilename());
 
-        if (!$fs->exists($lookup)) {
-            $io->error(sprintf("The \"%s\" does not exist.", $lookup));
-
-            return 1;
-        }
-
-        if (is_dir($lookup)) {
-            $folderBase = $lookup . '/' . self::FOLDER_NAME . '/';
-
-            if (!$fs->exists($folderBase)) {
-                $fs->mkdir($folderBase);
+                return [$img];
             }
-
-            $images = (new Finder())
-                ->in($lookup)
-                ->files()
-                ->name($input->getOption('pattern'))
-                ->exclude(self::FOLDER_NAME);
-        } else {
-            // file
-            $img = new \SplFileInfo($lookup);
-            $folderBase = \dirname($img->getRealPath()) . '/';
-
-            \copy($img->getRealPath(), \dirname($img->getRealPath()) . '/original_' . $img->getFilename());
-
-            $images = [$img];
-        }
+        );
 
         /** @var \SplFileInfo $image */
         if (!empty($input->getArgument('size'))) {
@@ -80,7 +61,7 @@ class ResizeImageCommand extends Command
 
         $save = 0;
         $counting = 0;
-        foreach ($images as $image) {
+        foreach ($lookup->files as $image) {
             $counting++;
             $imagine = new Imagine();
             $optimizer = OptimizerChainFactory::create()->useLogger(new ConsoleLogger($output));
@@ -88,7 +69,7 @@ class ResizeImageCommand extends Command
             $imagineImage = $imagine->open($image->getRealPath());
             $isGif = 'gif' === $image->getExtension();
 
-            $newFileRealPath = $this->getNewFileName($image, $input, $folderBase, $counting);
+            $newFileRealPath = $this->getNewFileName($image, $input, $lookup->folderBase, $counting);
 
             if (isset($width, $height)) {
                 $imagineImage = $imagineImage
@@ -132,16 +113,16 @@ class ResizeImageCommand extends Command
             $currentSave = $beforeSize - $afterSize;
 
             if ($currentSave < 0) {
-                $io->warning($message);
+                $lookup->io->warning($message);
             } else {
-                $io->success($message);
+                $lookup->io->success($message);
             }
 
             $save += $currentSave;
         }
 
         if (0 < $save) {
-            $io->success(sprintf('Save! %s',
+            $lookup->io->success(sprintf('Save! %s',
                 Utils::formatBytes($save)
             ));
         }

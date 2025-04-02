@@ -2,6 +2,7 @@
 
 namespace Converter;
 
+use DTO\Lookup;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -31,46 +32,19 @@ class WebPConverterCommand extends Command
             throw new \LogicException('Please install `cwebp` before use this command.');
         }
 
-        $fs = new Filesystem();
-        $io = new SymfonyStyle($input, $output);
-        $lookup = $input->getArgument('lookup');
-
-        if (!$fs->exists($lookup)) {
-            $io->error(sprintf("The \"%s\" does not exist.", $lookup));
-
-            return 1;
-        }
-
-        if (is_dir($lookup)) {
-            $folderBase = $lookup . '/' . self::FOLDER_NAME . '/';
-
-            if (!$fs->exists($folderBase)) {
-                $fs->mkdir($folderBase);
-            }
-
-            $images = (new Finder())
-                ->in($lookup)
-                ->files()
-                ->exclude(self::FOLDER_NAME);
-        } else {
-            // file
-            $img = new \SplFileInfo($lookup);
-            $folderBase = \dirname($img->getRealPath()) . '/';
-
-            $images = [$img];
-        }
+        $lookup = Lookup::create($input, $output, self::FOLDER_NAME);
 
         /** @var \SplFileInfo $image */
-        foreach ($images as $image) {
+        foreach ($lookup->files as $image) {
             try {
-                WebPConvert::convert($image->getRealPath(), $folderBase . \explode('.', $image->getFilename())[0] . '.webp');
+                WebPConvert::convert($image->getRealPath(), $lookup->folderBase . \explode('.', $image->getFilename())[0] . '.webp');
             } catch (\Exception $e) {
-                $io->error(\sprintf('Convert %s error %s.', $image->getFilename(), $e->getMessage()));
+                $lookup->io->error(\sprintf('Convert %s error %s.', $image->getFilename(), $e->getMessage()));
 
                 continue;
             }
 
-            $io->success(\sprintf('Convert %s successfully.', $image->getFilename()));
+            $lookup->io->success(\sprintf('Convert %s successfully.', $image->getFilename()));
         }
 
         return 0;
