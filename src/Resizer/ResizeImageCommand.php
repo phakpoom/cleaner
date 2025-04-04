@@ -95,7 +95,7 @@ class ResizeImageCommand extends Command
 
             $afterSize = filesize($newFileRealPath);
             if (!$input->getOption('include_bigger') && $afterSize > $beforeSize) {
-                $fs->remove($newFileRealPath);
+                $lookup->fs->remove($newFileRealPath);
 
                 continue;
             }
