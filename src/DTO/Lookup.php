@@ -48,6 +48,7 @@ class Lookup
 
             $files = (new Finder())
                 ->in($lookup)
+                ->depth('== 0')
                 ->files()
                 ->exclude($folderBase);
 
