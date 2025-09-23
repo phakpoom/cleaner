@@ -37,7 +37,10 @@ class WebPConverterCommand extends Command
         /** @var \SplFileInfo $image */
         foreach ($lookup->files as $image) {
             try {
-                WebPConvert::convert($image->getRealPath(), $lookup->folderBase . \explode('.', $image->getFilename())[0] . '.webp');
+                $filename = \explode('.', $image->getFilename());
+                $filename = \array_slice($filename, 0, -1);
+                $filename = \implode('.', $filename);
+                WebPConvert::convert($image->getRealPath(), $lookup->folderBase . $filename . '.webp');
             } catch (\Exception $e) {
                 $lookup->io->error(\sprintf('Convert %s error %s.', $image->getFilename(), $e->getMessage()));
 
