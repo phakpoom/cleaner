@@ -28,8 +28,19 @@ class WebPConverterCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        self::doConvert($input, $output);
+
+        return 0;
+    }
+
+    public static function doConvert(InputInterface $input, OutputInterface $output, string $customLookup = null): void
+    {
         if (!\shell_exec(sprintf("which %s", \escapeshellarg('cwebp')))) {
             throw new \LogicException('Please install `cwebp` before use this command.');
+        }
+
+        if ($customLookup) {
+            $input->setArgument('lookup', $customLookup);
         }
 
         $lookup = Lookup::create($input, $output, self::FOLDER_NAME);
@@ -42,14 +53,12 @@ class WebPConverterCommand extends Command
                 $filename = \implode('.', $filename);
                 WebPConvert::convert($image->getRealPath(), $lookup->folderBase . $filename . '.webp');
             } catch (\Exception $e) {
-                $lookup->io->error(\sprintf('Convert %s error %s.', $image->getFilename(), $e->getMessage()));
+                $lookup->io->error(\sprintf('Convert %s to webp error %s.', $image->getFilename(), $e->getMessage()));
 
                 continue;
             }
 
-            $lookup->io->success(\sprintf('Convert %s successfully.', $image->getFilename()));
+            $lookup->io->success(\sprintf('Convert %s to webp successfully.', $image->getFilename()));
         }
-
-        return 0;
     }
 }

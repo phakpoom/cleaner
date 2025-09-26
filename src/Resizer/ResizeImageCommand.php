@@ -2,6 +2,7 @@
 
 namespace Resizer;
 
+use Converter\WebPConverterCommand;
 use DTO\Lookup;
 use Imagine\Filter\Basic\Autorotate;
 use Imagine\Filter\Basic\WebOptimization;
@@ -33,7 +34,8 @@ class ResizeImageCommand extends Command
             ->addOption('quality', 'quality', InputOption::VALUE_OPTIONAL, 'quality', 95)
             ->addOption('include_bigger', 'include_bigger', InputOption::VALUE_NONE, 'include_bigger')
             ->addOption('pattern', 'pattern', InputOption::VALUE_OPTIONAL, '', '*.{png,jpg,jpeg,gif,JPG,JPEG}')
-            ->addOption('name', 'name', InputOption::VALUE_OPTIONAL, 'new_file_name_COUNT *** COUNT = index file');
+            ->addOption('name', 'name', InputOption::VALUE_OPTIONAL, 'new_file_name_COUNT *** COUNT = index file')
+            ->addOption('webp', 'webp', InputOption::VALUE_NONE, 'and convert to webp.');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -91,6 +93,10 @@ class ResizeImageCommand extends Command
                 $optimizer->optimize($newFileRealPath);
             } else {
                 $optimizer->optimize($image->getRealPath(), $newFileRealPath);
+            }
+
+            if ($input->getOption('webp')) {
+                WebPConverterCommand::doConvert($input, $output, $newFileRealPath);
             }
 
             $afterSize = filesize($newFileRealPath);
