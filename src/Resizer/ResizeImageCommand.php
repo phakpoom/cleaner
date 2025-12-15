@@ -92,12 +92,13 @@ class ResizeImageCommand extends Command
 
                 $optimizer->optimize($newFileRealPath);
             } else {
-                $optimizer->optimize($image->getRealPath(), $newFileRealPath);
+                $optimizer->optimize($newFileRealPath);
             }
 
             if ($input->getOption('webp')) {
                 WebPConverterCommand::doConvert($input, $output, $newFileRealPath);
             }
+
 
             $afterSize = filesize($newFileRealPath);
             if (!$input->getOption('include_bigger') && $afterSize > $beforeSize) {
