@@ -92,7 +92,11 @@ class ResizeImageCommand extends Command
 
                 $optimizer->optimize($newFileRealPath);
             } else {
-                $optimizer->optimize($newFileRealPath);
+                if ($lookup->isDirLookup) {
+                    $optimizer->optimize($image->getRealPath(), $newFileRealPath);
+                } else {
+                    $optimizer->optimize($newFileRealPath);
+                }
             }
 
             if ($input->getOption('webp')) {

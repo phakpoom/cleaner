@@ -24,6 +24,8 @@ class Lookup
     /** @var array */
     public $files;
 
+    public $isDirLookup;
+
     public static function create(
         InputInterface  $input,
         OutputInterface $output,
@@ -72,6 +74,7 @@ class Lookup
         $lookup->io = $io;
         $lookup->folderBase = $folderBase;
         $lookup->files = $files;
+        $lookup->isDirLookup = is_dir($input->getArgument('lookup'));
 
         return $lookup;
     }
